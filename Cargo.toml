@@ -1,0 +1,8 @@
+[package]
+name = "projet_hal"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+avr-device = { version = "0.4.0", features = ["atmega328p"] }
+embedded-hal = { version = "0.2.6", features = ["unproven"] }
