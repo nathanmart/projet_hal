@@ -2,10 +2,6 @@
 mod gpio;
 mod usart;
 
-use embedded_hal::digital::v2::OutputPin;
-/* [CORRECTION GPIO] 
-   You should not use an external HAL. What you did in gpio.rs is more what is expecting
-(Don't hesitate to remove this comment)*/
 use gpio::GpioPin;
 use crate::usart::Usart;
 
