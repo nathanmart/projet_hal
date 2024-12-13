@@ -1,3 +1,9 @@
+/*
+[CORRECTION USART] (Don't hesitate to remove this part)
+Even if you don't use the external crates embedded-hal and avr-device, I recommand to remove them from your project with the ```cargo remove your_dependencies```, it could generate some errors.
+One target is missing (one of your choice).
+You could try implementing the different USART mode (asynchrone double speed for example) for your Atmega target.
+*/
 // Importer le module GPIO
 mod gpio;
 mod usart;
