@@ -6,10 +6,12 @@ You could try implementing the different USART mode (asynchrone double speed for
 */
 // Importer le module GPIO
 mod gpio;
-mod usart;
+mod usart_atmega328p;
+mod usart_esp8266;
+mod usar;
 
 use gpio::GpioPin;
-use crate::usart::Usart;
+use crate::usart_atmega328p::Usart;
 
 fn main() {
     // --- PARTIE 1 - TEST DES GPIO ---
