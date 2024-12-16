@@ -12,16 +12,31 @@ pub struct Usart;
 
 impl Usart {
     // Initialisation avec un baud rate spécifique
-    pub fn init(baud_rate: u16){
+    pub fn init(baud_rate: u16, double_speed: bool) {
         unsafe {
-            // Configuration du baud rate en l'écrivant dans les registres adéquats
-            ptr::write_volatile(UBRR0H, (baud_rate >> 8) as u8); // Haute
-            ptr::write_volatile(UBRR0L, baud_rate as u8); // Basse
+            if double_speed {
+                // Active le mode double vitesse
+                ptr::write_volatile(UCSRA, ptr::read_volatile(UCSRA) | (1 << 1));
+            } else {
+                // Désactive le mode double vitesse
+                ptr::write_volatile(UCSRA, ptr::read_volatile(UCSRA) & !(1 << 1));
+            }
 
-            // Activation de la transmission et de la réception
+            // Calcul du baud rate en utilisant u32 pour éviter le dépassement
+            let ubrr: u16 = if double_speed {
+                ((16_000_000u32 / (8 * baud_rate as u32)) - 1) as u16 // Mode double vitesse
+            } else {
+                ((16_000_000u32 / (16 * baud_rate as u32)) - 1) as u16 // Mode normal
+            };
+
+            // Configure le baud rate
+            ptr::write_volatile(UBRR0H, (ubrr >> 8) as u8); // Partie haute
+            ptr::write_volatile(UBRR0L, ubrr as u8);        // Partie basse
+
+            // Active la transmission et la réception
             ptr::write_volatile(UCSR0B, (1 << 3) | (1 << 4));
 
-            // Configuration du format de données : 8 bits de données et 1 nit stop
+            // Configuration du format : 8 bits de données, 1 stop bit
             ptr::write_volatile(UCSR0C, (1 << 1) | (1 << 1));
         }
     }

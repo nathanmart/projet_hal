@@ -1,65 +1,91 @@
-/*
-[CORRECTION USART] (Don't hesitate to remove this part)
-Even if you don't use the external crates embedded-hal and avr-device, I recommand to remove them from your project with the ```cargo remove your_dependencies```, it could generate some errors.
-One target is missing (one of your choice).
-You could try implementing the different USART mode (asynchrone double speed for example) for your Atmega target.
-*/
-// Importer le module GPIO
+// Importer les modules GPIO et USART
 mod gpio;
 mod usart_atmega328p;
 mod usart_esp8266;
-mod usar;
 
-use gpio::GpioPin;
+
+// Configuration conditionnelle pour sélectionner le module USART approprié
+#[cfg(target_arch = "avr")]
 use crate::usart_atmega328p::Usart;
 
+#[cfg(target_arch = "xtensa")]
+use crate::usart_esp8266::Usart;
+
 fn main() {
+    println!("--- DÉBUT DES TESTS ---");
+
     // --- PARTIE 1 - TEST DES GPIO ---
-    // Création d'une instance de GpioPin pour la pin 2
-    let pin2 = GpioPin { pin: 2 };
+    // Création d'une instance de GpioPin pour la pin 2 (pour Atmega328p)
+    #[cfg(target_arch = "avr")]
+    {
+        let pin2 = GpioPin { pin: 2 };
 
-    // Pin en mode sortie
-    pin2.configure_as_output();
+        // Configurer la pin comme sortie et tester l'état
+        pin2.configure_as_output();
+        pin2.write(true);
+        let state = pin2.read();
+        println!("GPIO state (high expected): {:?}", state);
 
-    // Met pin à l'état haut
-    pin2.write(true);
+        pin2.write(false);
+        let state = pin2.read();
+        println!("GPIO state (low expected): {:?}", state);
 
-    // Lecture de l'état
-    let state = pin2.read();
-    println!("GPIO state (high expeted): {:?}", state);
-
-    // Changer l'état du pin et lire à nouveau l'état
-    pin2.write(false);
-    let state = pin2.read();
-    println!("GPIO state (low expeted): {:?}", state);
-
-    // Configurer pin en entré et activer la pull-up
-    pin2.configure_as_input();
-    pin2.enable_pullup();
-
-    // Lire l'état du pin
-    let state = pin2.read();
-    println!("GPIO state in entry with pull-up: {:?}", state);
-
+        // Configurer la pin en entrée et activer la résistance pull-up
+        pin2.configure_as_input();
+        pin2.enable_pullup();
+        let state = pin2.read();
+        println!("GPIO state in entry with pull-up: {:?}", state);
+    }
 
     // --- PARTIE 2 - USART ---
-    // Initialisation de l'USART avec baud rate = 9600
-    Usart::init(9600);
+    println!("--- TEST USART ---");
 
-    // ENvoie d'un message, caractère par caractère
-    Usart::send(b'H');
-    Usart::send(b'e');
-    Usart::send(b'l');
-    Usart::send(b'l');
-    Usart::send(b'o');
-    Usart::send(b' ');
-    Usart::send(b'W');
-    Usart::send(b'o');
-    Usart::send(b'r');
-    Usart::send(b'l');
-    Usart::send(b'd');
+    // Test pour Atmega328p
+    #[cfg(target_arch = "avr")]
+    {
+        println!("Initialisation de l'USART (Atmega328p, 9600 baud, mode normal)");
+        Usart::init(9600, false);
+        Usart::send(b'H');
+        Usart::send(b'e');
+        Usart::send(b'l');
+        Usart::send(b'l');
+        Usart::send(b'o');
+        println!("Message envoyé en mode normal : Hello");
 
-    // Recevoir un caractère
-    let received = Usart::receive();
-    println!("Caractère reçu: {}", received);
+        println!("Initialisation en mode double vitesse");
+        Usart::init(9600, true);
+        Usart::send(b'D');
+        Usart::send(b'o');
+        Usart::send(b'u');
+        Usart::send(b'b');
+        Usart::send(b'l');
+        Usart::send(b'e');
+        println!("Message envoyé en double vitesse : Double");
+
+        let received = Usart::receive();
+        println!("Caractère reçu : {}", received);
+    }
+
+    // Test pour ESP8266
+    #[cfg(target_arch = "xtensa")]
+    {
+        println!("Initialisation de l'USART (ESP8266, 9600 baud)");
+        Usart::init(9600);
+        Usart::send(b'H');
+        Usart::send(b'e');
+        Usart::send(b'l');
+        Usart::send(b'l');
+        Usart::send(b'o');
+        Usart::send(b' ');
+        Usart::send(b'E');
+        Usart::send(b'S');
+        Usart::send(b'P');
+        Usart::send(b'8');
+        Usart::send(b'2');
+        Usart::send(b'6');
+        Usart::send(b'6');
+        println!("Message envoyé pour ESP8266 : Hello ESP8266");
+    }
+
+    println!("--- FIN DES TESTS ---");
 }
