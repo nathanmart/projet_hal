@@ -1,3 +1,7 @@
+/*
+[CORRECTION SPI] (don't hesitate to remove this part)
+You didn't implement the SPI feature.
+*/
 // Importer les modules GPIO et USART
 mod gpio;
 mod usart_atmega328p;
